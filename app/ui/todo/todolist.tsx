@@ -1,7 +1,7 @@
 // import clsx from "clsx";
 import { Todo } from "@/app/lib/definition";
-import { deleteSingleTodo } from "@/app/lib/action";
-import DeleteButton from "../deleteButton";
+import ArchiveButton from "../archiveButton";
+import DoneButton from "../doneButton";
 export default async function TodoList({ todolist }: { todolist: Todo[] }) {
   return (
     <div className="flex w-full flex-col md:col-span-4">
@@ -22,7 +22,8 @@ export default async function TodoList({ todolist }: { todolist: Todo[] }) {
                     <p className="truncatetext-sm font-semibold md:text-base text-black">
                       {todo.description}
                     </p>
-                    <DeleteButton todoId={todo.id} />
+                    <DoneButton todoId={todo.id} />
+                    <ArchiveButton todoId={todo.id} />
                   </div>
                 </div>
               </div>

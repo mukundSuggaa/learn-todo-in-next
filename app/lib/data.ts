@@ -4,7 +4,7 @@ import { sql } from "@vercel/postgres";
 import { Todo } from "./definition";
 export async function fetchTodos() {
   try {
-    const data = await sql<Todo>`select * from todos`;
+    const data = await sql<Todo>`select * from todos where status='pending'`;
     return data.rows;
   } catch (error) {
     console.error("Failed to fetch todo:", error);

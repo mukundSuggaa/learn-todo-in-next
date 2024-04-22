@@ -29,10 +29,10 @@ export async function insertSingleTodo(formData: FormData) {
  *
  * @param formData
  */
-export async function deleteSingleTodo({ id }: { id: string }) {
+export async function archiveSingleTodo({ id }: { id: string }) {
   try {
     if (!id) {
-      return;
+      return false;
     }
     // parse it using zod schema
     const query = `select * from todos where id=${id}`;
@@ -40,33 +40,36 @@ export async function deleteSingleTodo({ id }: { id: string }) {
     const data = await sql<Todo>`select * from todos where id=${id}`;
     if (!data.rows.length) {
       console.log("[NOTFOUNDERROR]:no such id found");
-      return;
+      return false;
     }
-    const res = await sql`DELETE FROM TODOS WHERE id=${id}`;
+    const res = await sql`UPDATE TODOS SET status='archived' WHERE id=${id}`;
     console.log("result:", res);
     // remove router cache, trigger fetching of todo list again
     revalidatePath("/todo");
-    redirect("/dashboard/todos");
+    // redirect("/todo");
     return true;
   } catch (error) {
     console.log(error);
   }
 }
 
-// export async function deleteSingleTodo(formData: FormData) {
-//   try {
-//     const id = formData.get("id") as string;
-//     if (!id) {
-//       return;
-//     }
-//     const data = await sql<Todo>`select * from todos where id='${id}'`;
-//     if (!data.rows.length) {
-//       return;
-//     }
-//     await sql`DELETE FROM TODOS WHERE id=${id}`;
-//     // remove router cache, trigger fetching of todo list again
-//     revalidatePath("/dashboard/todos");
-//   } catch (error) {
-//     console.log(error);
-//   }
-// }
+export async function markDoneSingleTodo({
+  id,
+}: {
+  id: string;
+}): Promise<Boolean> {
+  try {
+    const data = await sql<Todo>`select * from todos where id=${id}`;
+    if (!data.rows.length) {
+      console.log("[NOTFOUNDERROR]:no such id found");
+      return false;
+    }
+    await sql`UPDATE TODOS SET status='done' WHERE id=${id}`;
+    // remove router cache, trigger fetching of todo list again
+    revalidatePath("/todo");
+    return true;
+  } catch (error) {
+    console.log(error);
+    throw new Error("error");
+  }
+}
