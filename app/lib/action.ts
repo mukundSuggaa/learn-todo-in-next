@@ -1,6 +1,6 @@
 "use server";
 import { z } from "zod";
-import { db, sql, VercelPoolClient } from "@vercel/postgres";
+import { db, sql } from "@vercel/postgres";
 import { revalidatePath } from "next/cache";
 import { Todo } from "./definition";
 import { redirect } from "next/navigation";
@@ -17,11 +17,16 @@ export async function insertSingleTodo(formData: FormData) {
     const { description } = CreateTodo.parse({
       description: formData.get("description") as string,
     });
-    await sql`INSERT INTO TODOS(description) VALUES(${description})`;
-    // remove router cache, trigger fetching of todo list again
+    console.log(
+      "Type of description:",
+      typeof description,
+      "\n sql:",
+      `INSERT INTO TODOS(description) VALUES(${description})`
+    );
+    await sql`INSERT INTO TODOS(description, status) VALUES(${description}, 'pending')`;
     revalidatePath("/todo");
   } catch (error) {
-    console.log(error);
+    console.log("Error in adding todo", error);
   }
 }
 
@@ -42,22 +47,15 @@ export async function archiveSingleTodo({ id }: { id: string }) {
       console.log("[NOTFOUNDERROR]:no such id found");
       return false;
     }
-    const res = await sql`UPDATE TODOS SET status='archived' WHERE id=${id}`;
-    console.log("result:", res);
-    // remove router cache, trigger fetching of todo list again
+    await sql`UPDATE TODOS SET status='archived' WHERE id=${id}`;
     revalidatePath("/todo");
-    // redirect("/todo");
     return true;
   } catch (error) {
     console.log(error);
   }
 }
 
-export async function markDoneSingleTodo({
-  id,
-}: {
-  id: string;
-}): Promise<Boolean> {
+export async function markDoneSingleTodo({ id }: { id: string }) {
   try {
     const data = await sql<Todo>`select * from todos where id=${id}`;
     if (!data.rows.length) {
@@ -69,7 +67,6 @@ export async function markDoneSingleTodo({
     revalidatePath("/todo");
     return true;
   } catch (error) {
-    console.log(error);
-    throw new Error("error");
+    console.log("error in marking: ", error);
   }
 }
